@@ -14,34 +14,39 @@ function PeaceTreaty() {
       setLoading(true); // Optional: To show a loading state during deletion
       console.log("here 1")
       const userRef = doc(db, "Users", userID); // Reference to the specific user document
-      await deleteDoc(userRef); // Delete the document
+      console.log(userRef)
+      await deleteDoc(userRef)
+      .then(res=>{console.log("user deleted successfully:",res)})
+      .catch(err=>console.log(err));
+      // await deleteDoc(userRef); // Delete the document
       console.log(`User with ID ${userID} deleted successfully.`);
       // Optionally refresh the user list after deletion
-      setUsers((prevUsers) => prevUsers.filter((user) => user.userID !== userID));
+      fetchUsers();
+      // setUsers((prevUsers) => prevUsers.filter((user) => user.userID !== userID));
     } catch (error) {
       console.error("Error deleting user: ", error);
     } finally {
       setLoading(false);
     }
   };
-  
+  const fetchUsers = async () => {
+    try {
+      const usersRef = collection(db, "Users");
+      const q = query(usersRef, where("signed", "!=", ""));
+      const querySnapshot = await getDocs(q);
+      const usersData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setUsers(usersData);
+    } catch (error) {
+      console.error("Error fetching users: ", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const usersRef = collection(db, "Users");
-        const q = query(usersRef, where("signed", "!=", ""));
-        const querySnapshot = await getDocs(q);
-        const usersData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setUsers(usersData);
-      } catch (error) {
-        console.error("Error fetching users: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+   
 
     fetchUsers();
   }, []);
